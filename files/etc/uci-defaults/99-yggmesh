@@ -239,9 +239,9 @@ if [ -n "$RADIO_5G" ] && [ "$DUAL_BAND" = "true" ]; then
     uci set "wireless.${RADIO_5G}.channel=36"
 fi
 
-# --- 2.4GHz radio: mesh backhaul + Private AP ---
+# --- 2.4GHz radio: always mesh backhaul; AP only if single-band ---
 if [ -n "$RADIO_2G" ]; then
-    # Mesh interface on 2.4GHz
+    # Mesh interface on 2.4GHz (always — dedicated backhaul on all devices)
     uci batch <<-WIFI_2G_MESH
 set wireless.mesh_2g=wifi-iface
 set wireless.mesh_2g.device='${RADIO_2G}'
@@ -253,8 +253,10 @@ set wireless.mesh_2g.key='${MESH_KEY}'
 set wireless.mesh_2g.network='bat0_hardif_mesh0'
 WIFI_2G_MESH
 
-    # Private AP on 2.4GHz (range: outdoor, through walls)
-    uci batch <<-WIFI_2G_PRIV
+    # Private AP on 2.4GHz — single-band devices only
+    # (dual-band devices dedicate 2.4GHz to mesh and use 5GHz for client AP)
+    if [ "$DUAL_BAND" = "false" ]; then
+        uci batch <<-WIFI_2G_PRIV
 set wireless.private_2g=wifi-iface
 set wireless.private_2g.device='${RADIO_2G}'
 set wireless.private_2g.mode='ap'
@@ -268,23 +270,11 @@ set wireless.private_2g.mobility_domain='0a01'
 set wireless.private_2g.ieee80211k='1'
 set wireless.private_2g.ieee80211v='1'
 WIFI_2G_PRIV
+    fi
 fi
 
-# --- 5GHz radio: mesh backhaul + Private AP ---
+# --- 5GHz radio: AP only (dual-band devices) — dedicated client radio ---
 if [ -n "$RADIO_5G" ] && [ "$DUAL_BAND" = "true" ]; then
-    # Mesh interface on 5GHz
-    uci batch <<-WIFI_5G_MESH
-set wireless.mesh_5g=wifi-iface
-set wireless.mesh_5g.device='${RADIO_5G}'
-set wireless.mesh_5g.mode='mesh'
-set wireless.mesh_5g.mesh_id='${MESH_ID}'
-set wireless.mesh_5g.mesh_fwding='0'
-set wireless.mesh_5g.encryption='sae'
-set wireless.mesh_5g.key='${MESH_KEY}'
-set wireless.mesh_5g.network='bat0_hardif_mesh1'
-WIFI_5G_MESH
-
-    # Private AP on 5GHz (better throughput, 802.11r/k/v for seamless roaming)
     uci batch <<-WIFI_5G_PRIV
 set wireless.private_5g=wifi-iface
 set wireless.private_5g.device='${RADIO_5G}'

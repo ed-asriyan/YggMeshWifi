@@ -24,6 +24,8 @@ PRIV_SUBNET="10.0.0.0"
 YGG_PORT="17000"
 # Yggdrasil multicast interface regex
 YGG_PEER_REGEX=".+"
+# Alfis DNS resolver (Yggdrasil global DNS)
+ALFIS_DNS="324:71e:281a:9ed3::53"
 
 if [ -f /etc/yggmesh/keys ] && grep -q "^NODE_MAC=" /etc/yggmesh/keys; then
     # OTA update — /etc/yggmesh/keys preserved by sysupgrade.conf
@@ -351,7 +353,7 @@ FW_EOF
 uci commit firewall
 
 # ============================================================================
-# 7. DHCP CONFIGURATION
+# 7. DHCP / DNS CONFIGURATION
 # ============================================================================
 
 # Remove existing DHCP pools that may conflict
@@ -363,6 +365,17 @@ set dhcp.private.interface='private'
 set dhcp.private.start='100'
 set dhcp.private.limit='150'
 set dhcp.private.leasetime='12h'
+# Advertise router's own IPv4 for DNS (which forwards to Alfis)
+# Note: DHCPv4 option 6 cannot be an IPv6 address
+add_list dhcp.private.dhcp_option='6,${PRIV_IP}'
+
+# Configure Dnsmasq to use Alfis, alongside reliable public DNS
+# This bypasses potentially broken/hijacked ISP DNS so public peers always resolve
+set dhcp.@dnsmasq[0].noresolv='1'
+set dhcp.@dnsmasq[0].localuse='1'
+add_list dhcp.@dnsmasq[0].server='${ALFIS_DNS}'
+add_list dhcp.@dnsmasq[0].server='1.1.1.1'
+add_list dhcp.@dnsmasq[0].server='8.8.8.8'
 DHCP_EOF
 
 uci commit dhcp
@@ -481,6 +494,7 @@ set dhcp.private.dhcpv6='disabled'
 set dhcp.private.ra_management='0'
 set dhcp.private.ra_default='1'
 set dhcp.private.ra_slaac='1'
+add_list dhcp.private.dns='${ALFIS_DNS}'
 PRIV6_EOF
     uci commit dhcp
 

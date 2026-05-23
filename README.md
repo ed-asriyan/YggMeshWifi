@@ -7,6 +7,7 @@ This project builds a mesh network for cases where normal network infrastructure
 - Routers connect to each other over [802.11s WiFi mesh](https://en.wikipedia.org/wiki/IEEE_802.11s).
 - Yggdrasil runs directly on top of those 802.11s interfaces and provides end-to-end encrypted IPv6 mesh routing.
 - Every node runs an open WiFi hotspot. Phones and laptops that connect to it are placed directly into the Yggdrasil network — they receive a globally-routable `200::/7` IPv6 address via SLAAC automatically.
+- All WiFi clients can resolve and access [Alfis](https://alfis.name) domains (such as `.ygg` and other Yggdrasil services) out of the box, thanks to integrated Alfis DNS forwarding.
 - No internet connection, cloud service, or pre-configuration is required. Flash the firmware and the node is ready.
 - Clearnet access is **not** provided by this project.
 

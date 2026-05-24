@@ -9,7 +9,7 @@ This project builds a mesh network for cases where normal network infrastructure
 - Every node runs an open WiFi hotspot. Phones and laptops that connect to it are placed directly into the Yggdrasil network — they receive a globally-routable `200::/7` IPv6 address via SLAAC automatically.
 - All WiFi clients can resolve and access [Alfis](https://alfis.name) domains (such as `.ygg` and other Yggdrasil services) out of the box, thanks to integrated Alfis DNS forwarding.
 - No internet connection, cloud service, or pre-configuration is required. Flash the firmware and the node is ready.
-- Clearnet access is **not** provided by this project.
+- Clearnet access is **not** provided by this project, however you can achieve it with [yggdrasil-clearnet-proxy](https://github.com/ed-asriyan/yggdrasil-clearnet-proxy). Read [Clearnet Access](#clearnet-access).
 
 ![Diagram](./diagram.drawio.svg)
 
@@ -125,6 +125,27 @@ To verify the mesh is working correctly, set up a 3-node linear test (A → B �
 2. Try to load a public Yggdrasil website. You can find public websites  at https://yggdrasil-network.github.io/services.html.
 
 If the site loads, your mesh is successfully formed and routing Yggdrasil traffic end-to-end across multiple hops.
+
+## Clearnet Access
+To maintain project focus and strict isolation, YggMesh does **not** provide outbound internet (clearnet) access natively.
+
+However, because all mesh clients receive globally-routable Yggdrasil IPv6 addresses, you can easily route your clearnet traffic through a VPS out of the box. 
+
+### 1. Connecting YggMesh to the global Yggdrasil network
+1. Connect any of the YggMesh devices to clearnet (e.g. insert ethernat cable)
+2. Connect to **YggMesh** WiFi on your phone or laptop and open http://10.0.0.1/cgi-bin/luci/admin/network/network. Authorise if required
+2. Next to **yggdrasil** intefrace, click **Edit**
+3. Open **Peers** tab
+4. Under **Peer addresses**, click **Add peer address**. Insert **Peer URI** and leave **Peer interface** empty. *You can find list of public peers [here](https://publicpeers.neilalexander.dev/). It's recommended to add just a few addresses from your country*
+5. Click **Save**
+6. Click **Save & Apply**
+7. Next to **yggdrasil** intefrace, click **Edit**
+8. Ensure that you see peers under **Active peers** and that their status is **Up**. If their status is **Down**, your YggMesh device does not have clearnet access (e.g. ethernet port is not connected) or peer is not reachable for any reason - try changing peers and save & apply.
+
+Now the entire local YggMesh network is a part of the global Yggdrasil network
+
+### 2. Connecting to global clearnet (the Internet)
+Setup [yggdrasil-clearnet-proxy](https://github.com/ed-asriyan/yggdrasil-clearnet-proxy) - read the project's readme and setup socks5 proxy on your device connected to YggMesh WiFi.
 
 ## License
 
